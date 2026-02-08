@@ -461,8 +461,5 @@ If you encounter any issues or have questions:
 <div align="center">
 
 ### ⭐ Star this repository if you find it helpful!
-
-**Made with ❤️ by Kesh3805**
-
 </div>
 
