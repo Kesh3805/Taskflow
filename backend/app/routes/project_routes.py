@@ -8,6 +8,7 @@ project_bp = Blueprint("projects", __name__)
 
 @project_bp.route("", methods=["POST"])
 @jwt_required()
+@admin_required
 def create_project():
     user = get_current_user()
     if not user:

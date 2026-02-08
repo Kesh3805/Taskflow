@@ -218,6 +218,26 @@ export default function ProjectDetails() {
       <h1 style={styles.title}>{project.name}</h1>
       <p style={styles.desc}>{project.description || 'No description'}</p>
 
+      {/* Role Indicator */}
+      <div style={styles.roleIndicator}>
+        {user?.role === 'ADMIN' ? (
+          <>
+            <span style={styles.roleBadgeAdmin}>ADMIN</span>
+            <span style={styles.roleText}>Full access to all project features</span>
+          </>
+        ) : isOwner ? (
+          <>
+            <span style={styles.roleBadgeOwner}>OWNER</span>
+            <span style={styles.roleText}>You own this project - manage members & labels</span>
+          </>
+        ) : (
+          <>
+            <span style={styles.roleBadgeMember}>MEMBER</span>
+            <span style={styles.roleText}>Create & manage tasks, comment, use labels</span>
+          </>
+        )}
+      </div>
+
       {/* Summary Cards */}
       <div style={styles.summaryRow}>
         {['TODO', 'IN_PROGRESS', 'DONE'].map((s) => (
@@ -272,45 +292,47 @@ export default function ProjectDetails() {
       </div>
 
       {/* Labels */}
-      {isOwner && (
-        <div style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <h3 style={{ margin: 0 }}>Labels ({labels.length})</h3>
+      <div style={styles.section}>
+        <div style={styles.sectionHeader}>
+          <h3 style={{ margin: 0 }}>Labels ({labels.length})</h3>
+          {isOwner && (
             <button onClick={() => setShowLabelForm(!showLabelForm)} style={styles.smallBtn}>
               <FiTag size={14} /> Add Label
             </button>
-          </div>
-          {showLabelForm && (
-            <form onSubmit={handleCreateLabel} style={styles.inlineForm}>
-              <input
-                type="text"
-                placeholder="Label name"
-                value={labelName}
-                onChange={(e) => setLabelName(e.target.value)}
-                style={styles.input}
-                required
-              />
-              <input
-                type="color"
-                value={labelColor}
-                onChange={(e) => setLabelColor(e.target.value)}
-                style={styles.colorInput}
-              />
-              <button type="submit" style={styles.smallSubmitBtn}>Create</button>
-            </form>
           )}
-          <div style={styles.labelList}>
-            {labels.map((label) => (
-              <div 
-                key={label.id} 
-                style={{ 
-                  ...styles.labelChip, 
-                  backgroundColor: label.color + '20', 
-                  border: `1px solid ${label.color}`,
-                  color: label.color 
-                }}
-              >
-                {label.name}
+        </div>
+        {showLabelForm && isOwner && (
+          <form onSubmit={handleCreateLabel} style={styles.inlineForm}>
+            <input
+              type="text"
+              placeholder="Label name"
+              value={labelName}
+              onChange={(e) => setLabelName(e.target.value)}
+              style={styles.input}
+              required
+            />
+            <input
+              type="color"
+              value={labelColor}
+              onChange={(e) => setLabelColor(e.target.value)}
+              style={styles.colorInput}
+            />
+            <button type="submit" style={styles.smallSubmitBtn}>Create</button>
+          </form>
+        )}
+        <div style={styles.labelList}>
+          {labels.map((label) => (
+            <div 
+              key={label.id} 
+              style={{ 
+                ...styles.labelChip, 
+                backgroundColor: label.color + '20', 
+                border: `1px solid ${label.color}`,
+                color: label.color 
+              }}
+            >
+              {label.name}
+              {isOwner && (
                 <button
                   onClick={() => handleDeleteLabel(label.id)}
                   style={styles.labelDeleteBtn}
@@ -318,12 +340,12 @@ export default function ProjectDetails() {
                 >
                   ×
                 </button>
-              </div>
-            ))}
-            {labels.length === 0 && <p style={{ color: '#999', fontSize: '0.9rem' }}>No labels yet</p>}
-          </div>
+              )}
+            </div>
+          ))}
+          {labels.length === 0 && <p style={{ color: '#999', fontSize: '0.9rem' }}>No labels yet{!isOwner && ' - only project owner can create labels'}</p>}
         </div>
-      )}
+      </div>
 
       {/* Filters & Tasks */}
       <div style={styles.section}>
@@ -474,6 +496,47 @@ const styles = {
   },
   title: { margin: '0 0 0.3rem', fontSize: '1.8rem', color: '#1a1a2e' },
   desc: { color: '#777', marginBottom: '1.5rem' },
+  roleIndicator: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.8rem',
+    padding: '0.8rem 1.2rem',
+    background: '#f8f9fa',
+    borderRadius: '10px',
+    marginBottom: '1.5rem',
+    border: '1px solid #e9ecef',
+  },
+  roleBadgeAdmin: {
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: '#fff',
+    padding: '0.3rem 0.9rem',
+    borderRadius: '16px',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    letterSpacing: '0.5px',
+  },
+  roleBadgeOwner: {
+    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    color: '#fff',
+    padding: '0.3rem 0.9rem',
+    borderRadius: '16px',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    letterSpacing: '0.5px',
+  },
+  roleBadgeMember: {
+    background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    color: '#fff',
+    padding: '0.3rem 0.9rem',
+    borderRadius: '16px',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    letterSpacing: '0.5px',
+  },
+  roleText: {
+    fontSize: '0.85rem',
+    color: '#666',
+  },
   summaryRow: {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, 1fr)',

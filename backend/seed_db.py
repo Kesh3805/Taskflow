@@ -8,6 +8,9 @@ from app.extensions import db
 from app.models.user import User
 from app.models.project import Project
 from app.models.task import Task
+from app.models.comment import Comment
+from app.models.label import Label
+from app.models.activity_log import ActivityLog
 
 def seed_database():
     app = create_app()
@@ -16,9 +19,23 @@ def seed_database():
         
         # Clear existing data
         print("Clearing existing data...")
-        Task.query.delete()
-        Project.query.delete()
-        User.query.delete()
+        
+        # Disable foreign key checks temporarily
+        db.session.execute(db.text("SET FOREIGN_KEY_CHECKS = 0"))
+        
+        # Truncate tables to reset auto-increment IDs
+        db.session.execute(db.text("TRUNCATE TABLE activity_logs"))
+        db.session.execute(db.text("TRUNCATE TABLE comments"))
+        db.session.execute(db.text("TRUNCATE TABLE task_labels"))
+        db.session.execute(db.text("TRUNCATE TABLE labels"))
+        db.session.execute(db.text("TRUNCATE TABLE tasks"))
+        db.session.execute(db.text("TRUNCATE TABLE project_members"))
+        db.session.execute(db.text("TRUNCATE TABLE projects"))
+        db.session.execute(db.text("TRUNCATE TABLE users"))
+        
+        # Re-enable foreign key checks
+        db.session.execute(db.text("SET FOREIGN_KEY_CHECKS = 1"))
+        
         db.session.commit()
         
         # Create users

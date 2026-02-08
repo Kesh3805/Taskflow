@@ -9,7 +9,7 @@ from typing import Optional
 label_bp = Blueprint("label", __name__)
 
 
-@label_bp.route("/<int:project_id>/labels", methods=["GET"])
+@label_bp.route("/projects/<int:project_id>/labels", methods=["GET"])
 @jwt_required()
 def get_project_labels(project_id: int):
     """Get all labels for a project"""
@@ -34,7 +34,7 @@ def get_project_labels(project_id: int):
         return jsonify({"error": str(e)}), 500
 
 
-@label_bp.route("/<int:project_id>/labels", methods=["POST"])
+@label_bp.route("/projects/<int:project_id>/labels", methods=["POST"])
 @jwt_required()
 def create_label(project_id: int):
     """Create a new label for a project"""

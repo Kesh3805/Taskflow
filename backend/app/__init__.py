@@ -26,7 +26,7 @@ def create_app(config_class=Config):
     app.register_blueprint(project_bp, url_prefix="/api/projects")
     app.register_blueprint(task_bp, url_prefix="/api/tasks")
     app.register_blueprint(comment_bp, url_prefix="/api/tasks")
-    app.register_blueprint(label_bp, url_prefix="/api/projects")
+    app.register_blueprint(label_bp, url_prefix="/api")
 
     # Create tables
     with app.app_context():

@@ -43,6 +43,33 @@
 - **Password Hashing** - Bcrypt encryption for user credentials
 - **Protected Routes** - API and frontend route protection
 - **Session Management** - Automatic token refresh
+- **Role-Based Access Control** - Granular permissions for admins and members
+
+### 👥 Role-Based Permissions
+
+**ADMIN Role:**
+- ✅ Create new projects
+- ✅ View and manage all projects
+- ✅ Full access to all features
+- ✅ Override project owner permissions
+- ✅ System-wide management capabilities
+
+**Project OWNER:**
+- ✅ Manage project settings (edit, delete)
+- ✅ Add/remove project members
+- ✅ Create and delete labels
+- ✅ Full task management
+- ✅ View activity logs and analytics
+
+**Project MEMBER:**
+- ✅ View project details
+- ✅ Create, edit, and delete tasks
+- ✅ Add comments on tasks
+- ✅ Use existing labels (cannot create new ones)
+- ✅ View team members and activity
+- ❌ Cannot modify project settings
+- ❌ Cannot add/remove members
+- ❌ Cannot create/delete labels
 
 ---
 
