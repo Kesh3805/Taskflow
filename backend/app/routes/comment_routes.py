@@ -15,6 +15,9 @@ comment_bp = Blueprint("comment", __name__)
 def get_comments(task_id: int):
     """Get all comments for a task"""
     try:
+        from app.models.user import User
+        from app.services.project_service import ProjectService
+        
         current_user_id: int = get_jwt_identity()
         
         # Check if task exists and user has access
@@ -26,11 +29,13 @@ def get_comments(task_id: int):
         if not project:
             return jsonify({"error": "Project not found"}), 404
         
-        # Check if user is project member or owner
-        is_owner = project.owner_id == current_user_id
-        is_member = any(member.id == current_user_id for member in project.members)  # type: ignore
+        # Get user to check role
+        user: Optional[User] = db.session.get(User, current_user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
         
-        if not is_owner and not is_member:
+        # Check if user has access to project
+        if user.role != "ADMIN" and not ProjectService.is_project_member(project, current_user_id):
             return jsonify({"error": "Access denied"}), 403
         
         comments = Comment.query.filter_by(task_id=task_id).order_by(Comment.created_at.desc()).all()  # type: ignore
@@ -64,11 +69,16 @@ def create_comment(task_id: int):
         if not project:
             return jsonify({"error": "Project not found"}), 404
         
-        # Check if user is project member or owner
-        is_owner = project.owner_id == current_user_id
-        is_member = any(member.id == current_user_id for member in project.members)  # type: ignore
+        # Get user to check role
+        from app.models.user import User
+        from app.services.project_service import ProjectService
         
-        if not is_owner and not is_member:
+        user: Optional[User] = db.session.get(User, current_user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Check if user has access to project
+        if user.role != "ADMIN" and not ProjectService.is_project_member(project, current_user_id):
             return jsonify({"error": "Access denied"}), 403
         
         # Create comment

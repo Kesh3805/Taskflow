@@ -28,6 +28,7 @@ export default function ProjectDetails() {
   // Add member
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedUserRole, setSelectedUserRole] = useState('MEMBER');
   const [showMemberForm, setShowMemberForm] = useState(false);
 
   // Labels
@@ -152,8 +153,12 @@ export default function ProjectDetails() {
       return;
     }
     try {
-      await API.post(`/projects/${id}/members`, { user_id: parseInt(selectedUserId) });
+      await API.post(`/projects/${id}/members`, { 
+        user_id: parseInt(selectedUserId),
+        role: selectedUserRole 
+      });
       setSelectedUserId('');
+      setSelectedUserRole('MEMBER');
       setShowMemberForm(false);
       fetchProject();
     } catch (err) {
@@ -199,7 +204,9 @@ export default function ProjectDetails() {
     return <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>Loading...</div>;
   }
 
-  const isOwner = project.owner_id === user?.id || user?.role === 'ADMIN';
+  // Check if user is PM (Project Manager) for this project
+  const currentUserMember = project.members?.find(m => m.id === user?.id);
+  const isPM = user?.role === 'ADMIN' || currentUserMember?.project_role === 'PM';
 
   return (
     <div style={styles.container}>
@@ -208,7 +215,7 @@ export default function ProjectDetails() {
         <button onClick={() => navigate('/')} style={styles.backBtn}>
           <FiArrowLeft size={18} /> Back
         </button>
-        {isOwner && (
+        {isPM && (
           <button onClick={handleDeleteProject} style={styles.deleteProjectBtn}>
             <FiTrash2 size={16} /> Delete Project
           </button>
@@ -225,10 +232,10 @@ export default function ProjectDetails() {
             <span style={styles.roleBadgeAdmin}>ADMIN</span>
             <span style={styles.roleText}>Full access to all project features</span>
           </>
-        ) : isOwner ? (
+        ) : isPM ? (
           <>
-            <span style={styles.roleBadgeOwner}>OWNER</span>
-            <span style={styles.roleText}>You own this project - manage members & labels</span>
+            <span style={styles.roleBadgeOwner}>PM</span>
+            <span style={styles.roleText}>Project Manager - manage members, labels & tasks</span>
           </>
         ) : (
           <>
@@ -256,7 +263,7 @@ export default function ProjectDetails() {
       <div style={styles.section}>
         <div style={styles.sectionHeader}>
           <h3 style={{ margin: 0 }}>Members ({project.members?.length || 0})</h3>
-          {isOwner && (
+          {isPM && (
             <button onClick={() => setShowMemberForm(!showMemberForm)} style={styles.smallBtn}>
               <FiUserPlus size={14} /> Add
             </button>
@@ -279,13 +286,32 @@ export default function ProjectDetails() {
                   </option>
                 ))}
             </select>
+            <select
+              value={selectedUserRole}
+              onChange={(e) => setSelectedUserRole(e.target.value)}
+              style={styles.select}
+            >
+              <option value="MEMBER">Member</option>
+              <option value="PM">Project Manager</option>
+            </select>
             <button type="submit" style={styles.smallSubmitBtn}>Add</button>
           </form>
         )}
         <div style={styles.memberList}>
           {project.members?.map((m) => (
             <span key={m.id} style={styles.memberChip}>
-              {m.name} {m.id === project.owner_id && '👑'}
+              {m.name} 
+              {m.project_role === 'PM' && (
+                <span style={{ 
+                  marginLeft: '6px', 
+                  fontSize: '0.75rem', 
+                  padding: '2px 6px', 
+                  backgroundColor: '#f59e0b', 
+                  color: 'white', 
+                  borderRadius: '4px',
+                  fontWeight: 'bold'
+                }}>PM</span>
+              )}
             </span>
           ))}
         </div>
@@ -295,13 +321,13 @@ export default function ProjectDetails() {
       <div style={styles.section}>
         <div style={styles.sectionHeader}>
           <h3 style={{ margin: 0 }}>Labels ({labels.length})</h3>
-          {isOwner && (
+          {isPM && (
             <button onClick={() => setShowLabelForm(!showLabelForm)} style={styles.smallBtn}>
               <FiTag size={14} /> Add Label
             </button>
           )}
         </div>
-        {showLabelForm && isOwner && (
+        {showLabelForm && isPM && (
           <form onSubmit={handleCreateLabel} style={styles.inlineForm}>
             <input
               type="text"
@@ -332,7 +358,7 @@ export default function ProjectDetails() {
               }}
             >
               {label.name}
-              {isOwner && (
+              {isPM && (
                 <button
                   onClick={() => handleDeleteLabel(label.id)}
                   style={styles.labelDeleteBtn}
@@ -343,7 +369,7 @@ export default function ProjectDetails() {
               )}
             </div>
           ))}
-          {labels.length === 0 && <p style={{ color: '#999', fontSize: '0.9rem' }}>No labels yet{!isOwner && ' - only project owner can create labels'}</p>}
+          {labels.length === 0 && <p style={{ color: '#999', fontSize: '0.9rem' }}>No labels yet{!isPM && ' - only project managers can create labels'}</p>}
         </div>
       </div>
 

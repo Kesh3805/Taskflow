@@ -4,6 +4,8 @@ from app.extensions import db
 from app.models.label import Label
 from app.models.task import Task
 from app.models.project import Project
+from app.models.user import User
+from app.services.project_service import ProjectService
 from typing import Optional
 
 label_bp = Blueprint("label", __name__)
@@ -20,11 +22,13 @@ def get_project_labels(project_id: int):
         if not project:
             return jsonify({"error": "Project not found"}), 404
         
-        # Check if user has access to project
-        is_owner = project.owner_id == current_user_id
-        is_member = any(member.id == current_user_id for member in project.members)  # type: ignore
+        # Get user to check role
+        user: Optional[User] = db.session.get(User, current_user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
         
-        if not is_owner and not is_member:
+        # Check if user has access to project (ADMIN or project member)
+        if user.role != "ADMIN" and not ProjectService.is_project_member(project, current_user_id):
             return jsonify({"error": "Access denied"}), 403
         
         labels = Label.query.filter_by(project_id=project_id).order_by(Label.name).all()
@@ -49,9 +53,14 @@ def create_label(project_id: int):
         if not project:
             return jsonify({"error": "Project not found"}), 404
         
-        # Only project owner can create labels
-        if project.owner_id != current_user_id:
-            return jsonify({"error": "Only project owner can create labels"}), 403
+        # Get user to check role
+        user: Optional[User] = db.session.get(User, current_user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Check if user has PM access (ADMIN or PM for this project)
+        if not ProjectService.has_pm_access(project, current_user_id, user.role):
+            return jsonify({"error": "Only admins or project managers can create labels"}), 403
         
         name = data.get("name")
         color = data.get("color", "#6b7280")  # Default gray color
@@ -99,9 +108,14 @@ def update_label(label_id: int):
         if not project:
             return jsonify({"error": "Project not found"}), 404
         
-        # Only project owner can update labels
-        if project.owner_id != current_user_id:
-            return jsonify({"error": "Only project owner can update labels"}), 403
+        # Get user to check role
+        user: Optional[User] = db.session.get(User, current_user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Check if user has PM access (ADMIN or PM for this project)
+        if not ProjectService.has_pm_access(project, current_user_id, user.role):
+            return jsonify({"error": "Only admins or project managers can update labels"}), 403
         
         name = data.get("name")
         color = data.get("color")
@@ -147,9 +161,14 @@ def delete_label(label_id: int):
         if not project:
             return jsonify({"error": "Project not found"}), 404
         
-        # Only project owner can delete labels
-        if project.owner_id != current_user_id:
-            return jsonify({"error": "Only project owner can delete labels"}), 403
+        # Get user to check role
+        user: Optional[User] = db.session.get(User, current_user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Check if user has PM access (ADMIN or PM for this project)
+        if not ProjectService.has_pm_access(project, current_user_id, user.role):
+            return jsonify({"error": "Only admins or project managers can delete labels"}), 403
         
         db.session.delete(label)
         db.session.commit()
@@ -184,11 +203,16 @@ def add_label_to_task(task_id: int, label_id: int):
         if not project:
             return jsonify({"error": "Project not found"}), 404
         
-        # Check if user has access
-        is_owner = project.owner_id == current_user_id
-        is_member = any(member.id == current_user_id for member in project.members)  # type: ignore
+        # Get user to check role
+        from app.models.user import User
+        from app.services.project_service import ProjectService
         
-        if not is_owner and not is_member:
+        user: Optional[User] = db.session.get(User, current_user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Check if user has access to project
+        if user.role != "ADMIN" and not ProjectService.is_project_member(project, current_user_id):
             return jsonify({"error": "Access denied"}), 403
         
         # Add label to task if not already added
@@ -222,11 +246,16 @@ def remove_label_from_task(task_id: int, label_id: int):
         if not project:
             return jsonify({"error": "Project not found"}), 404
         
-        # Check if user has access
-        is_owner = project.owner_id == current_user_id
-        is_member = any(member.id == current_user_id for member in project.members)  # type: ignore
+        # Get user to check role
+        from app.models.user import User
+        from app.services.project_service import ProjectService
         
-        if not is_owner and not is_member:
+        user: Optional[User] = db.session.get(User, current_user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Check if user has access to project
+        if user.role != "ADMIN" and not ProjectService.is_project_member(project, current_user_id):
             return jsonify({"error": "Access denied"}), 403
         
         # Remove label from task

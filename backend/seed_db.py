@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from app import create_app
 from app.extensions import db
 from app.models.user import User
-from app.models.project import Project
+from app.models.project import Project, ProjectMember
 from app.models.task import Task
 from app.models.comment import Comment
 from app.models.label import Label
@@ -17,29 +17,14 @@ def seed_database():
     with app.app_context():
         print("🌱 Seeding database with sample data...\n")
         
-        # Clear existing data
-        print("Clearing existing data...")
-        
-        # Disable foreign key checks temporarily
-        db.session.execute(db.text("SET FOREIGN_KEY_CHECKS = 0"))
-        
-        # Truncate tables to reset auto-increment IDs
-        db.session.execute(db.text("TRUNCATE TABLE activity_logs"))
-        db.session.execute(db.text("TRUNCATE TABLE comments"))
-        db.session.execute(db.text("TRUNCATE TABLE task_labels"))
-        db.session.execute(db.text("TRUNCATE TABLE labels"))
-        db.session.execute(db.text("TRUNCATE TABLE tasks"))
-        db.session.execute(db.text("TRUNCATE TABLE project_members"))
-        db.session.execute(db.text("TRUNCATE TABLE projects"))
-        db.session.execute(db.text("TRUNCATE TABLE users"))
-        
-        # Re-enable foreign key checks
-        db.session.execute(db.text("SET FOREIGN_KEY_CHECKS = 1"))
-        
-        db.session.commit()
+        # Drop and recreate all tables
+        print("Recreating database tables with new schema...")
+        db.drop_all()
+        db.create_all()
+        print("   ✓ Tables recreated successfully\n")
         
         # Create users
-        print("\n👥 Creating users...")
+        print("👥 Creating users...")
         admin = User(name="Admin User", email="admin@taskflow.com", role="ADMIN")
         admin.set_password("admin123")
         
@@ -63,21 +48,48 @@ def seed_database():
             description="Modernize company website with new design and features",
             owner_id=admin.id
         )
-        project1.members.extend([admin, alice, bob])
+        db.session.add(project1)
+        db.session.flush()
+        
+        # Add members with roles for project1
+        # Admin is owner and PM
+        ProjectMember(user_id=admin.id, project_id=project1.id, role="PM")
+        # Alice is also a PM (project manager)
+        db.session.add(ProjectMember(user_id=alice.id, project_id=project1.id, role="PM"))
+        # Bob is regular member
+        db.session.add(ProjectMember(user_id=bob.id, project_id=project1.id, role="MEMBER"))
         
         project2 = Project(
             name="Mobile App Development",
             description="Build native mobile app for iOS and Android",
             owner_id=alice.id
         )
-        project2.members.extend([alice, bob, charlie])
+        db.session.add(project2)
+        db.session.flush()
+        
+        # Add members with roles for project2
+        # Alice is owner and PM
+        db.session.add(ProjectMember(user_id=alice.id, project_id=project2.id, role="PM"))
+        # Bob is also a PM
+        db.session.add(ProjectMember(user_id=bob.id, project_id=project2.id, role="PM"))
+        # Charlie is regular member
+        db.session.add(ProjectMember(user_id=charlie.id, project_id=project2.id, role="MEMBER"))
         
         project3 = Project(
             name="Marketing Campaign Q1",
             description="Launch social media and email marketing campaign",
             owner_id=bob.id
         )
-        project3.members.extend([bob, charlie, admin])
+        db.session.add(project3)
+        db.session.flush()
+        
+        # Add members with roles for project3
+        # Bob is owner and PM
+        db.session.add(ProjectMember(user_id=bob.id, project_id=project3.id, role="PM"))
+        # Charlie is regular member
+        db.session.add(ProjectMember(user_id=charlie.id, project_id=project3.id, role="MEMBER"))
+        # Admin is regular member (showing admins can also be members)
+        db.session.add(ProjectMember(user_id=admin.id, project_id=project3.id, role="MEMBER"))
         
         db.session.add_all([project1, project2, project3])
         db.session.commit()

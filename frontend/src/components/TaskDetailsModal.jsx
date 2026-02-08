@@ -87,7 +87,7 @@ const TaskDetailsModal = ({ task, isOpen, onClose, onUpdate, projectLabels, proj
 
   const handleAddLabel = async (labelId) => {
     try {
-      const response = await API.post(`/projects/tasks/${task.id}/labels/${labelId}`);
+      const response = await API.post(`/tasks/${task.id}/labels/${labelId}`);
       onUpdate(response.data);
     } catch (error) {
       alert('Failed to add label: ' + (error.response?.data?.error || error.message));
@@ -96,7 +96,7 @@ const TaskDetailsModal = ({ task, isOpen, onClose, onUpdate, projectLabels, proj
 
   const handleRemoveLabel = async (labelId) => {
     try {
-      const response = await API.delete(`/projects/tasks/${task.id}/labels/${labelId}`);
+      const response = await API.delete(`/tasks/${task.id}/labels/${labelId}`);
       onUpdate(response.data);
     } catch (error) {
       alert('Failed to remove label: ' + (error.response?.data?.error || error.message));

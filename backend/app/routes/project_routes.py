@@ -62,8 +62,9 @@ def update_project(project_id):
     if not project:
         return jsonify({"error": "Project not found"}), 404
 
-    if user.role != "ADMIN" and project.owner_id != user.id:
-        return jsonify({"error": "Only the owner or admin can update this project"}), 403
+    # Check if user has PM access (ADMIN system-wide or PM for this project)
+    if not ProjectService.has_pm_access(project, user.id, user.role):
+        return jsonify({"error": "Only admins or project managers can update this project"}), 403
 
     data = request.get_json()
     project = ProjectService.update_project(
@@ -84,8 +85,9 @@ def delete_project(project_id):
     if not project:
         return jsonify({"error": "Project not found"}), 404
 
-    if user.role != "ADMIN" and project.owner_id != user.id:
-        return jsonify({"error": "Only the owner or admin can delete this project"}), 403
+    # Check if user has PM access (ADMIN system-wide or PM for this project)
+    if not ProjectService.has_pm_access(project, user.id, user.role):
+        return jsonify({"error": "Only admins or project managers can delete this project"}), 403
 
     ProjectService.delete_project(project)
     return jsonify({"message": "Project deleted"}), 200
@@ -101,15 +103,21 @@ def add_member(project_id):
     if not project:
         return jsonify({"error": "Project not found"}), 404
 
-    if user.role != "ADMIN" and project.owner_id != user.id:
-        return jsonify({"error": "Only the owner or admin can add members"}), 403
+    # Check if user has PM access (ADMIN system-wide or PM for this project)
+    if not ProjectService.has_pm_access(project, user.id, user.role):
+        return jsonify({"error": "Only admins or project managers can add members"}), 403
 
     data = request.get_json()
     valid, error = validate_required_fields(data, ["user_id"])
     if not valid:
         return jsonify({"error": error}), 400
 
-    project, error = ProjectService.add_member(project, data["user_id"])
+    # Get role from request, default to MEMBER
+    member_role = data.get("role", "MEMBER")
+    if member_role not in ["PM", "MEMBER"]:
+        return jsonify({"error": "Invalid role. Must be PM or MEMBER"}), 400
+
+    project, error = ProjectService.add_member(project, data["user_id"], member_role)
     if error or not project:
         return jsonify({"error": error or "Failed to add member"}), 400
 
@@ -126,11 +134,43 @@ def remove_member(project_id, user_id):
     if not project:
         return jsonify({"error": "Project not found"}), 404
 
-    if current_user.role != "ADMIN" and project.owner_id != current_user.id:
-        return jsonify({"error": "Only the owner or admin can remove members"}), 403
+    # Check if user has PM access (ADMIN system-wide or PM for this project)
+    if not ProjectService.has_pm_access(project, current_user.id, current_user.role):
+        return jsonify({"error": "Only admins or project managers can remove members"}), 403
 
     project, error = ProjectService.remove_member(project, user_id)
     if error or not project:
         return jsonify({"error": error or "Failed to remove member"}), 400
 
     return jsonify({"message": "Member removed", "project": project.to_dict()}), 200
+
+
+@project_bp.route("/<int:project_id>/members/<int:user_id>/role", methods=["PUT"])
+@jwt_required()
+def update_member_role(project_id, user_id):
+    """Update a member's role (promote to PM or demote to MEMBER)"""
+    current_user = get_current_user()
+    if not current_user:
+        return jsonify({"error": "User not found"}), 404
+    project = ProjectService.get_project_by_id(project_id)
+    if not project:
+        return jsonify({"error": "Project not found"}), 404
+
+    # Check if user has PM access (ADMIN system-wide or PM for this project)
+    if not ProjectService.has_pm_access(project, current_user.id, current_user.role):
+        return jsonify({"error": "Only admins or project managers can change member roles"}), 403
+
+    data = request.get_json()
+    valid, error = validate_required_fields(data, ["role"])
+    if not valid:
+        return jsonify({"error": error}), 400
+    
+    new_role = data["role"]
+    if new_role not in ["PM", "MEMBER"]:
+        return jsonify({"error": "Invalid role. Must be PM or MEMBER"}), 400
+
+    project, error = ProjectService.update_member_role(project, user_id, new_role)
+    if error or not project:
+        return jsonify({"error": error or "Failed to update member role"}), 400
+
+    return jsonify({"message": f"Member role updated to {new_role}", "project": project.to_dict()}), 200
