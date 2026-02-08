@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -25,115 +29,64 @@ export default function Login() {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <div style={styles.header}>
-          <span style={{ fontSize: '2.5rem' }}>⚡</span>
-          <h1 style={styles.title}>TaskFlow</h1>
-          <p style={styles.subtitle}>Sign in to your account</p>
-        </div>
-
-        {error && <div style={styles.error}>{error}</div>}
-
-        <form onSubmit={handleSubmit}>
-          <div style={styles.field}>
-            <label style={styles.label}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
-              placeholder="you@example.com"
-              required
-            />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/20 via-primary/5 to-background p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 rounded-full bg-primary/10">
+              <Zap className="h-8 w-8 text-primary" />
+            </div>
           </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-              placeholder="••••••••"
-              required
-            />
-          </div>
-          <button type="submit" style={styles.button} disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
+          <CardTitle className="text-2xl font-bold">TaskFlow</CardTitle>
+          <CardDescription>Sign in to your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md mb-4">
+              {error}
+            </div>
+          )}
 
-        <p style={styles.footerText}>
-          Don't have an account?{' '}
-          <Link to="/register" style={styles.link}>Create one</Link>
-        </p>
-      </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">
+                Email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium">
+                Password
+              </label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-primary hover:underline font-medium">
+              Create one
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  },
-  card: {
-    background: '#fff',
-    borderRadius: '16px',
-    padding: '2.5rem',
-    width: '100%',
-    maxWidth: '400px',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-  },
-  header: { textAlign: 'center', marginBottom: '1.5rem' },
-  title: { margin: '0.5rem 0 0.2rem', fontSize: '1.8rem', color: '#1a1a2e' },
-  subtitle: { margin: 0, color: '#888', fontSize: '0.95rem' },
-  error: {
-    background: '#fce4ec',
-    color: '#c62828',
-    padding: '0.7rem 1rem',
-    borderRadius: '8px',
-    marginBottom: '1rem',
-    fontSize: '0.85rem',
-  },
-  field: { marginBottom: '1.2rem' },
-  label: {
-    display: 'block',
-    marginBottom: '0.4rem',
-    fontSize: '0.85rem',
-    fontWeight: '500',
-    color: '#444',
-  },
-  input: {
-    width: '100%',
-    padding: '0.7rem 0.9rem',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    fontSize: '0.95rem',
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: 'border-color 0.2s',
-  },
-  button: {
-    width: '100%',
-    padding: '0.8rem',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    fontWeight: '600',
-    cursor: 'pointer',
-    marginTop: '0.5rem',
-  },
-  footerText: {
-    textAlign: 'center',
-    marginTop: '1.5rem',
-    fontSize: '0.9rem',
-    color: '#888',
-  },
-  link: { color: '#667eea', fontWeight: '500', textDecoration: 'none' },
-};

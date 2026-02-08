@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 import API from '../api/axios';
 import ProjectCard from '../components/ProjectCard';
-import { FiPlus, FiX } from 'react-icons/fi';
+import { Plus, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -41,69 +45,83 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return <div style={styles.loading}>Loading projects...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Loading projects...</p>
+      </div>
+    );
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
+    <div className="container mx-auto p-6 max-w-7xl">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 style={styles.title}>Projects</h1>
-          <p style={styles.subtitle}>{projects.length} project(s)</p>
+          <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+          <p className="text-muted-foreground mt-1">{projects.length} project(s)</p>
         </div>
         {user?.role === 'ADMIN' && (
-          <button onClick={() => setShowForm(!showForm)} style={styles.addBtn}>
-            {showForm ? <FiX size={18} /> : <FiPlus size={18} />}
+          <Button onClick={() => setShowForm(!showForm)}>
+            {showForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
             {showForm ? 'Cancel' : 'New Project'}
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Role Info Banner */}
-      {user?.role === 'ADMIN' ? (
-        <div style={styles.infoBanner}>
-          <span style={styles.adminBadge}>ADMIN</span>
-          <p style={styles.infoText}>
-            As an admin, you can create projects, manage all resources, and have full access across the platform.
-          </p>
-        </div>
-      ) : (
-        <div style={styles.infoBannerMember}>
-          <span style={styles.memberBadge}>MEMBER</span>
-          <p style={styles.infoText}>
-            You can create tasks, comment, and collaborate on projects you're a member of. Only admins can create new projects.
-          </p>
-        </div>
-      )}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-3">
+            {user?.role === 'ADMIN' ? (
+              <>
+                <Badge className="mt-0.5">ADMIN</Badge>
+                <p className="text-sm text-muted-foreground">
+                  As an admin, you can create projects, manage all resources, and have full access across the platform.
+                </p>
+              </>
+            ) : (
+              <>
+                <Badge variant="secondary" className="mt-0.5">MEMBER</Badge>
+                <p className="text-sm text-muted-foreground">
+                  You can create tasks, comment, and collaborate on projects you're a member of. Only admins can create new projects.
+                </p>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {showForm && (
-        <form onSubmit={handleCreate} style={styles.form}>
-          <input
-            type="text"
-            placeholder="Project name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={styles.input}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            style={styles.input}
-          />
-          <button type="submit" style={styles.submitBtn}>Create Project</button>
-        </form>
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <form onSubmit={handleCreate} className="space-y-4">
+              <Input
+                type="text"
+                placeholder="Project name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <Input
+                type="text"
+                placeholder="Description (optional)"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+              <Button type="submit" className="w-full sm:w-auto">Create Project</Button>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
       {projects.length === 0 ? (
-        <div style={styles.empty}>
-          <p style={{ fontSize: '3rem', margin: 0 }}>📁</p>
-          <p style={{ color: '#888' }}>No projects yet. Create your first project!</p>
-        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <p className="text-6xl mb-4">📁</p>
+            <p className="text-muted-foreground">No projects yet. Create your first project!</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div style={styles.grid}>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
@@ -112,106 +130,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-const styles = {
-  container: { padding: '2rem', maxWidth: '1200px', margin: '0 auto' },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1.5rem',
-  },
-  title: { margin: 0, fontSize: '1.8rem', color: '#1a1a2e' },
-  subtitle: { margin: '0.3rem 0 0', color: '#888', fontSize: '0.9rem' },
-  addBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    padding: '0.6rem 1.2rem',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '0.9rem',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  form: {
-    background: '#fff',
-    padding: '1.5rem',
-    borderRadius: '12px',
-    marginBottom: '1.5rem',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
-    display: 'flex',
-    gap: '1rem',
-    flexWrap: 'wrap',
-  },
-  input: {
-    flex: '1 1 200px',
-    padding: '0.7rem 0.9rem',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    fontSize: '0.95rem',
-    outline: 'none',
-  },
-  submitBtn: {
-    padding: '0.7rem 1.5rem',
-    background: '#667eea',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    gap: '1.2rem',
-  },
-  empty: { textAlign: 'center', padding: '4rem 0' },
-  loading: { textAlign: 'center', padding: '4rem 0', color: '#888' },
-  infoBanner: {
-    background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
-    border: '1px solid #667eea40',
-    borderRadius: '12px',
-    padding: '1rem 1.5rem',
-    marginBottom: '1.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-  },
-  infoBannerMember: {
-    background: 'linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%)',
-    border: '1px solid #f093fb40',
-    borderRadius: '12px',
-    padding: '1rem 1.5rem',
-    marginBottom: '1.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-  },
-  adminBadge: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: '#fff',
-    padding: '0.4rem 1rem',
-    borderRadius: '20px',
-    fontSize: '0.75rem',
-    fontWeight: '700',
-    letterSpacing: '0.5px',
-  },
-  memberBadge: {
-    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    color: '#fff',
-    padding: '0.4rem 1rem',
-    borderRadius: '20px',
-    fontSize: '0.75rem',
-    fontWeight: '700',
-    letterSpacing: '0.5px',
-  },
-  infoText: {
-    margin: 0,
-    fontSize: '0.9rem',
-    color: '#555',
-    lineHeight: '1.5',
-  },
-};

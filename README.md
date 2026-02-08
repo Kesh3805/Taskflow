@@ -47,29 +47,46 @@
 
 ### 👥 Role-Based Permissions
 
-**ADMIN Role:**
-- ✅ Create new projects
-- ✅ View and manage all projects
-- ✅ Full access to all features
-- ✅ Override project owner permissions
-- ✅ System-wide management capabilities
+TaskFlow implements a sophisticated role-based access control system with both system-wide and project-specific roles:
 
-**Project OWNER:**
-- ✅ Manage project settings (edit, delete)
+#### System-Wide Roles
+
+**ADMIN Role:**
+- ✅ Create new projects (only admins can create projects)
+- ✅ View and manage all projects across the system
+- ✅ Full access to all features
+- ✅ Override all project-level permissions
+- ✅ System-wide management capabilities
+- ✅ Can be assigned as PM or Member on any project
+
+#### Project-Specific Roles
+
+**Project Manager (PM):**
+- ✅ Manage project settings (edit, delete project)
 - ✅ Add/remove project members
+- ✅ Promote members to PM or demote PMs to members
 - ✅ Create and delete labels
-- ✅ Full task management
+- ✅ Full task management (create, edit, delete, assign)
 - ✅ View activity logs and analytics
+- 📌 **Project-specific:** Users can be PM on some projects and regular member on others
+- 📌 **Multiple PMs:** Projects can have multiple project managers
+- 📌 **Assignable:** Admin or existing PMs can assign PM role when adding members
 
 **Project MEMBER:**
 - ✅ View project details
 - ✅ Create, edit, and delete tasks
 - ✅ Add comments on tasks
-- ✅ Use existing labels (cannot create new ones)
+- ✅ Use existing labels for tasks
 - ✅ View team members and activity
 - ❌ Cannot modify project settings
-- ❌ Cannot add/remove members
-- ❌ Cannot create/delete labels
+- ❌ Cannot add/remove members or change roles
+- ❌ Cannot create/delete labels (PM permission required)
+
+#### Key Permission Features:
+- **Flexible Role Assignment:** Same user can have different roles across different projects (PM on Project A, Member on Project B)
+- **Label Management:** Only PMs and Admins can create/delete labels, all members can view and use labels
+- **Project Creation:** Restricted to ADMIN role only for better governance
+- **Automatic PM Assignment:** Project creators are automatically assigned as PM on their project
 
 ---
 
@@ -94,8 +111,10 @@
 - **Build Tool:** Vite 6.4.1
 - **Routing:** React Router v6
 - **HTTP Client:** Axios
-- **Icons:** React Icons
-- **Styling:** Custom CSS with modern design
+- **UI Components:** shadcn/ui
+- **Styling:** Tailwind CSS v3 with modern design system
+- **Icons:** Lucide React
+- **Utilities:** clsx, tailwind-merge, class-variance-authority
 
 ### DevOps
 - **Version Control:** Git & GitHub
@@ -199,20 +218,34 @@ After running `seed_db.py`, you can login with:
 - **Admin User:**
   - Email: `admin@taskflow.com`
   - Password: `admin123`
+  - Role: System Admin (can create projects, full access)
 
-- **Regular User:**
-  - Email: `user@taskflow.com`
-  - Password: `user123`
+- **Alice Johnson:**
+  - Email: `alice@taskflow.com`
+  - Password: `alice123`
+  - Role: Member (PM on Projects 1 & 2)
+
+- **Bob Smith:**
+  - Email: `bob@taskflow.com`
+  - Password: `bob123`
+  - Role: Member (Member on Project 1, PM on Projects 2 & 3)
+
+- **Charlie Davis:**
+  - Email: `charlie@taskflow.com`
+  - Password: `charlie123`
+  - Role: Member (Regular member on Projects 2 & 3)
 
 ### Quick Start Guide
 
 1. **Register/Login** - Create an account or use test credentials
-2. **Create a Project** - Click "New Project" on the dashboard
-3. **Add Team Members** - Invite users to your project
-4. **Create Tasks** - Add tasks with titles, descriptions, priorities
-5. **Assign & Track** - Assign tasks to members and track progress
-6. **Collaborate** - Comment on tasks and view activity logs
-7. **Organize** - Use labels and filters to manage workload
+2. **View Projects** - Browse projects you're a member of (only Admins can create new projects)
+3. **Join Projects** - Admin or PM can add you to projects with specific roles (PM or Member)
+4. **Create Tasks** - Add tasks with titles, descriptions, priorities, and due dates
+5. **Assign & Track** - Assign tasks to team members and update status (Todo → In Progress → Done)
+6. **Collaborate** - Comment on tasks, mention team members, and view activity history
+7. **Organize** - PMs can create labels; all members can use labels to categorize tasks
+8. **Manage Team** - PMs can add/remove members and assign PM role to other members
+9. **Filter & Search** - Use advanced filters by status, priority, assignee, and labels
 
 ---
 
@@ -226,15 +259,16 @@ After running `seed_db.py`, you can login with:
 | GET    | `/api/auth/profile`   | Get current user   | ✅            |
 
 ### 📁 Projects
-| Method | Endpoint                                  | Description          | Auth Required |
-|--------|-------------------------------------------|----------------------|---------------|
-| POST   | `/api/projects`                           | Create project       | ✅            |
-| GET    | `/api/projects`                           | List user projects   | ✅            |
-| GET    | `/api/projects/<id>`                      | Get project details  | ✅            |
-| PUT    | `/api/projects/<id>`                      | Update project       | ✅            |
-| DELETE | `/api/projects/<id>`                      | Delete project       | ✅            |
-| POST   | `/api/projects/<id>/members`              | Add member           | ✅            |
-| DELETE | `/api/projects/<id>/members/<user_id>`    | Remove member        | ✅            |
+| Method | Endpoint                                  | Description          | Auth Required | Permission |
+|--------|-------------------------------------------|----------------------|---------------|------------|
+| POST   | `/api/projects`                           | Create project       | ✅            | Admin only |
+| GET    | `/api/projects`                           | List user projects   | ✅            | All        |
+| GET    | `/api/projects/<id>`                      | Get project details  | ✅            | Members    |
+| PUT    | `/api/projects/<id>`                      | Update project       | ✅            | PM/Admin   |
+| DELETE | `/api/projects/<id>`                      | Delete project       | ✅            | PM/Admin   |
+| POST   | `/api/projects/<id>/members`              | Add member           | ✅            | PM/Admin   |
+| DELETE | `/api/projects/<id>/members/<user_id>`    | Remove member        | ✅            | PM/Admin   |
+| PUT    | `/api/projects/<id>/members/<user_id>/role` | Update member role | ✅            | PM/Admin   |
 
 ### ✅ Tasks
 | Method | Endpoint                        | Description           | Auth Required |
@@ -252,12 +286,14 @@ After running `seed_db.py`, you can login with:
 | GET    | `/api/tasks/<id>/comments`      | Get task comments     | ✅            |
 
 ### 🏷️ Labels
-| Method | Endpoint                        | Description           | Auth Required |
-|--------|---------------------------------|-----------------------|---------------|
-| POST   | `/api/labels`                   | Create label          | ✅            |
-| GET    | `/api/labels`                   | List all labels       | ✅            |
-| POST   | `/api/tasks/<id>/labels`        | Add label to task     | ✅            |
-| DELETE | `/api/tasks/<task_id>/labels/<label_id>` | Remove label | ✅            |
+| Method | Endpoint                                    | Description           | Auth Required | Permission |
+|--------|---------------------------------------------|-----------------------|---------------|------------|
+| POST   | `/api/projects/<id>/labels`                 | Create label          | ✅            | PM/Admin   |
+| GET    | `/api/projects/<id>/labels`                 | List project labels   | ✅            | Members    |
+| PUT    | `/api/projects/<project_id>/labels/<id>`    | Update label          | ✅            | PM/Admin   |
+| DELETE | `/api/projects/<project_id>/labels/<id>`    | Delete label          | ✅            | PM/Admin   |
+| POST   | `/api/tasks/<task_id>/labels/<label_id>`    | Add label to task     | ✅            | Members    |
+| DELETE | `/api/tasks/<task_id>/labels/<label_id>`    | Remove label from task| ✅            | Members    |
 
 ---
 
@@ -301,6 +337,11 @@ TaskFlow/
 │   │   ├── 📁 api/
 │   │   │   └── axios.js         # HTTP client with JWT
 │   │   ├── 📁 components/       # React components
+│   │   │   ├── 📁 ui/           # shadcn/ui components
+│   │   │   │   ├── button.jsx
+│   │   │   │   ├── card.jsx
+│   │   │   │   ├── badge.jsx
+│   │   │   │   └── input.jsx
 │   │   │   ├── Navbar.jsx
 │   │   │   ├── TaskCard.jsx
 │   │   │   ├── ProjectCard.jsx
@@ -308,6 +349,8 @@ TaskFlow/
 │   │   │   └── LabelBadge.jsx
 │   │   ├── 📁 context/          # React Context
 │   │   │   └── AuthContext.jsx  # Authentication state
+│   │   ├── 📁 lib/              # Utilities
+│   │   │   └── utils.js         # cn() utility for Tailwind
 │   │   ├── 📁 pages/            # Application pages
 │   │   │   ├── Login.jsx
 │   │   │   ├── Register.jsx
@@ -316,7 +359,12 @@ TaskFlow/
 │   │   │   └── Tasks.jsx
 │   │   ├── App.jsx              # Root component
 │   │   ├── main.jsx            # Entry point
-│   │   └── index.css           # Global styles
+│   │   └── index.css           # Global styles + Tailwind
+│   ├── tailwind.config.cjs      # Tailwind configuration
+│   ├── postcss.config.cjs       # PostCSS configuration
+│   ├── vite.config.js          # Vite configuration
+│   ├── package.json            # Node dependencies
+│   └── .env.example            # Environment template
 │   ├── index.html
 │   ├── vite.config.js          # Vite configuration
 │   ├── package.json            # Node dependencies

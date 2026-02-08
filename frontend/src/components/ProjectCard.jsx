@@ -1,83 +1,36 @@
 import { useNavigate } from 'react-router-dom';
-import { FiFolder, FiUsers, FiCheckSquare } from 'react-icons/fi';
+import { Folder, Users, CheckSquare } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export default function ProjectCard({ project }) {
   const navigate = useNavigate();
 
   return (
-    <div
-      style={styles.card}
+    <Card 
+      className="cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1"
       onClick={() => navigate(`/projects/${project.id}`)}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.12)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.06)';
-      }}
     >
-      <div style={styles.header}>
-        <FiFolder size={20} color="#667eea" />
-        <h3 style={styles.title}>{project.name}</h3>
-      </div>
-      <p style={styles.description}>
-        {project.description || 'No description'}
-      </p>
-      <div style={styles.footer}>
-        <span style={styles.stat}>
-          <FiCheckSquare size={14} /> {project.task_count} tasks
-        </span>
-        <span style={styles.stat}>
-          <FiUsers size={14} /> {project.members?.length || 0} members
-        </span>
-      </div>
-    </div>
+      <CardHeader>
+        <div className="flex items-center gap-2 mb-2">
+          <Folder className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">{project.name}</CardTitle>
+        </div>
+        <CardDescription className="line-clamp-1">
+          {project.description || 'No description'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground border-t pt-4">
+          <div className="flex items-center gap-1.5">
+            <CheckSquare className="h-4 w-4" />
+            <span>{project.task_count} tasks</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Users className="h-4 w-4" />
+            <span>{project.members?.length || 0} members</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
-
-const styles = {
-  card: {
-    background: '#fff',
-    borderRadius: '12px',
-    padding: '1.5rem',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
-    border: '1px solid #f0f0f0',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.6rem',
-    marginBottom: '0.6rem',
-  },
-  title: {
-    margin: 0,
-    fontSize: '1.1rem',
-    fontWeight: '600',
-    color: '#1a1a2e',
-  },
-  description: {
-    color: '#666',
-    fontSize: '0.9rem',
-    margin: '0 0 1rem 0',
-    lineHeight: 1.4,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  footer: {
-    display: 'flex',
-    gap: '1rem',
-    borderTop: '1px solid #f5f5f5',
-    paddingTop: '0.8rem',
-  },
-  stat: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.3rem',
-    fontSize: '0.8rem',
-    color: '#888',
-  },
-};

@@ -1,6 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiLogOut, FiGrid, FiUser } from 'react-icons/fi';
+import { LogOut, LayoutDashboard, User, Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -14,92 +16,32 @@ export default function Navbar() {
   if (!user) return null;
 
   return (
-    <nav style={styles.nav}>
-      <Link to="/" style={styles.brand}>
-        <span style={styles.logo}>⚡</span> TaskFlow
-      </Link>
-      <div style={styles.links}>
-        <Link to="/" style={styles.link}>
-          <FiGrid size={16} /> Dashboard
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 text-xl font-bold">
+          <Zap className="h-6 w-6 text-primary" />
+          <span>TaskFlow</span>
         </Link>
-        <div style={styles.userSection}>
-          <span style={styles.userInfo}>
-            <FiUser size={14} />
-            {user.name}
-            <span style={styles.badge}>{user.role}</span>
-          </span>
-          <button onClick={handleLogout} style={styles.logoutBtn}>
-            <FiLogOut size={16} /> Logout
-          </button>
+        <div className="flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </Link>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span>{user.name}</span>
+              <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>
+                {user.role}
+              </Badge>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
     </nav>
   );
 }
-
-const styles = {
-  nav: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '0 2rem',
-    height: '60px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: '#fff',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-  },
-  brand: {
-    fontSize: '1.4rem',
-    fontWeight: '700',
-    color: '#fff',
-    textDecoration: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  logo: { fontSize: '1.6rem' },
-  links: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1.5rem',
-  },
-  link: {
-    color: '#fff',
-    textDecoration: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    fontSize: '0.9rem',
-    opacity: 0.9,
-  },
-  userSection: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem',
-  },
-  userInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    fontSize: '0.9rem',
-  },
-  badge: {
-    background: 'rgba(255,255,255,0.2)',
-    padding: '2px 8px',
-    borderRadius: '12px',
-    fontSize: '0.7rem',
-    fontWeight: '600',
-  },
-  logoutBtn: {
-    background: 'rgba(255,255,255,0.15)',
-    color: '#fff',
-    border: 'none',
-    padding: '6px 14px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-    fontSize: '0.85rem',
-  },
-};
